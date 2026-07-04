@@ -406,6 +406,9 @@ function calculateFlightPath(e) {
             document.getElementById('hud-velocity').style.color = 'var(--color-orange)';
             document.getElementById('hud-altitude').style.color = 'var(--color-orange)';
             
+            // Show overlay warning
+            document.getElementById('anomaly-alert-overlay').classList.add('active');
+            
             logToTerminal("WARNING: CRITICAL DIVERGENCE DETECTED. REACTOR CORE ENGINE FLUX STABILITY LOST!", "orange");
         } else {
             statusElement.innerHTML = '<span class="pulse-dot"></span>SYS STATUS: NOMINAL / STABLE';
@@ -414,6 +417,9 @@ function calculateFlightPath(e) {
             // Restore normal widget color
             document.getElementById('hud-velocity').style.color = '';
             document.getElementById('hud-altitude').style.color = '';
+            
+            // Hide overlay warning
+            document.getElementById('anomaly-alert-overlay').classList.remove('active');
             
             logToTerminal("SUCCESS: HYPERSPACE MATRIX STABILIZED. FLIGHT NOMINAL.", "green");
         }
