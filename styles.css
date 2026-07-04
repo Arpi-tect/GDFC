@@ -1,0 +1,955 @@
+/* GDFC - Futuristic Space Flight HUD Design System */
+
+:root {
+    --bg-color: #020208;
+    --panel-bg: rgba(6, 6, 20, 0.65);
+    --panel-border: rgba(0, 240, 255, 0.25);
+    --panel-border-glow: rgba(0, 240, 255, 0.1);
+    
+    --color-cyan: #00f0ff;
+    --color-cyan-glow: rgba(0, 240, 255, 0.4);
+    --color-orange: #ff5b00;
+    --color-orange-glow: rgba(255, 91, 0, 0.4);
+    --color-green: #00ff66;
+    --color-green-glow: rgba(0, 255, 102, 0.4);
+    --color-dark-blue: #0f1c3f;
+    --color-text: #d1f4ff;
+    --color-text-muted: #6e94a8;
+    
+    --font-display: 'Orbitron', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --hud-glow-filter: drop-shadow(0 0 8px var(--color-cyan-glow));
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--color-text);
+    font-family: var(--font-display);
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Background Space Canvas */
+#space-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+}
+
+/* Sci-fi Scanlines and Vignette Overlays */
+.hud-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.hud-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle, 
+        rgba(2, 2, 8, 0.1) 60%, 
+        rgba(0, 0, 0, 0.8) 100%
+    );
+    z-index: 9;
+    pointer-events: none;
+}
+
+/* Main Container Layout */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 15px;
+    z-index: 1;
+    position: relative;
+    max-width: 1920px;
+    margin: 0 auto;
+}
+
+/* HEADER MODULE */
+.hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--color-cyan);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.3));
+}
+
+.header-glitch-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-logo {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 10px var(--color-cyan), 0 0 20px var(--color-cyan);
+    position: relative;
+}
+
+.system-status {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-green);
+    display: flex;
+    align-items: center;
+    margin-top: 3px;
+    text-shadow: 0 0 5px var(--color-green-glow);
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--color-green);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.header-telemetry {
+    display: flex;
+    gap: 20px;
+}
+
+.telemetry-widget {
+    background: rgba(15, 28, 63, 0.4);
+    border: 1px solid var(--panel-border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.widget-label {
+    font-size: 9px;
+    color: var(--color-text-muted);
+    letter-spacing: 1px;
+}
+
+.widget-val {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--color-cyan);
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--color-cyan-glow);
+}
+
+/* PANELS ARCHITECTURE */
+.hud-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 15px var(--panel-border-glow), inset 0 0 10px var(--panel-border-glow);
+    border-radius: 8px;
+    position: relative;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Panel decorative corners */
+.hud-panel::before, .hud-panel::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-color: var(--color-cyan);
+    border-style: solid;
+    pointer-events: none;
+}
+.hud-panel::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+}
+.hud-panel::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+}
+
+.panel-header {
+    border-bottom: 1px solid var(--panel-border);
+    padding: 10px 15px;
+    background: rgba(0, 240, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h2 {
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    font-weight: 800;
+}
+
+.panel-header h2 .arrow {
+    color: var(--color-cyan);
+    margin-right: 6px;
+    animation: blink 2s infinite steps(2);
+}
+
+.panel-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-text-muted);
+}
+
+.panel-content {
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* MAIN COLUMN CONFIG */
+.hud-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 15px;
+    flex: 1;
+    min-height: 0; /* Important for scroll sizing */
+    margin-bottom: 15px;
+}
+
+/* AVIONICS PANEL Layout */
+.avionics-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.avionics-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: space-around;
+}
+
+/* GYROSCOPE (FLIGHT HORIZON) */
+.gyro-widget {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 3px solid var(--color-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.gyro-ring {
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    border: 1px dashed rgba(0, 240, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.gyro-horizon {
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: 180px;
+    height: 180px;
+    background: linear-gradient(to bottom, rgba(0, 240, 255, 0.15) 50%, rgba(255, 91, 0, 0.15) 50%);
+    border-bottom: 2px solid var(--color-cyan);
+    transform-origin: center;
+    transition: transform 0.15s ease-out;
+}
+
+.pitch-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.4) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: center;
+}
+
+.gyro-marker {
+    position: absolute;
+    width: 25px;
+    height: 6px;
+    background: var(--color-orange);
+    box-shadow: 0 0 8px var(--color-orange);
+    z-index: 2;
+    border-radius: 2px;
+}
+.gyro-marker::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 9px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 6px solid var(--color-orange);
+}
+
+.gyro-label {
+    position: absolute;
+    bottom: 5px;
+    font-size: 8px;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* RADAR SCANNER */
+.radar-widget {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 2px solid var(--color-cyan);
+    background: rgba(0, 15, 30, 0.6);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    overflow: hidden;
+}
+
+#radar-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.radar-scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(from 0deg at 50% 50%, rgba(0, 240, 255, 0.3) 0deg, transparent 90deg, transparent 360deg);
+    border-radius: 50%;
+    animation: rotate-radar 4s linear infinite;
+    pointer-events: none;
+}
+
+.radar-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    height: 90%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    pointer-events: none;
+}
+.radar-crosshair::before, .radar-crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 240, 255, 0.25);
+}
+.radar-crosshair::before {
+    top: 0; left: 50%; width: 1px; height: 100%;
+}
+.radar-crosshair::after {
+    top: 50%; left: 0; width: 100%; height: 1px;
+}
+
+.radar-blip {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--color-green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--color-green);
+    transform: translate(-50%, -50%);
+    animation: fade-blip 3s ease-out infinite;
+}
+
+/* ENGINE METERS */
+.engine-meters {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: var(--font-mono);
+}
+
+.engine-bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    font-size: 9px;
+}
+
+.bar-name {
+    color: var(--color-text-muted);
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.4s cubic-bezier(0.1, 0.8, 0.2, 1);
+}
+
+.thrust-fill {
+    background: var(--color-cyan);
+    box-shadow: 0 0 8px var(--color-cyan);
+}
+
+.reactor-fill {
+    background: var(--color-green);
+    box-shadow: 0 0 8px var(--color-green);
+}
+
+.plasma-fill {
+    background: var(--color-orange);
+    box-shadow: 0 0 8px var(--color-orange);
+}
+
+/* DIAGNOSTICS & INPUT PANELS */
+.diagnostics-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.diagnostics-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.diagnostics-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#diagnostics-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+/* 17 INPUT FIELDS GRID */
+.inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-height: 380px; /* Keep layout compact */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Scrollbar styling for cyber panels */
+.inputs-grid::-webkit-scrollbar, .terminal-content::-webkit-scrollbar {
+    width: 4px;
+}
+.inputs-grid::-webkit-scrollbar-track, .terminal-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+.inputs-grid::-webkit-scrollbar-thumb, .terminal-content::-webkit-scrollbar-thumb {
+    background: var(--panel-border);
+    border-radius: 2px;
+}
+
+.input-card {
+    background: rgba(15, 28, 63, 0.35);
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    border-radius: 4px;
+    padding: 8px 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.25s ease;
+}
+
+.input-card:hover, .input-card:focus-within {
+    border-color: var(--color-cyan);
+    background: rgba(15, 28, 63, 0.6);
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
+}
+
+.input-card label {
+    font-size: 9px;
+    color: var(--color-text-muted);
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.5px;
+}
+
+.hex-tag {
+    font-family: var(--font-mono);
+    color: var(--color-cyan);
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+.input-card input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 3px;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 4px 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+.input-card input:focus {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+/* Hide spin buttons in inputs */
+.input-card input::-webkit-outer-spin-button,
+.input-card input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.input-card input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.input-glow {
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-cyan-glow), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.input-card:focus-within .input-glow {
+    opacity: 1;
+}
+
+/* INFO CARD SPACE FILLER */
+.info-card {
+    border: 1px dashed rgba(255, 91, 0, 0.35);
+    background: rgba(255, 91, 0, 0.05);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+}
+.info-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--color-orange);
+    border-radius: 50%;
+    margin-bottom: 4px;
+    animation: pulse-orange 2s infinite;
+}
+.info-lbl {
+    font-size: 8px;
+    color: var(--color-orange);
+    font-weight: 800;
+}
+.info-status {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-text-muted);
+}
+
+/* SCI-FI BUTTONS */
+.hud-btn {
+    background: transparent;
+    border: 1px solid var(--color-cyan);
+    border-radius: 4px;
+    color: var(--color-cyan);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 5px var(--color-cyan-glow);
+}
+
+.hud-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(0, 240, 255, 0.25), 
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.hud-btn:hover::before {
+    left: 100%;
+}
+
+.btn-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 240, 255, 0.15) 50%);
+    background-size: 100% 2px;
+    pointer-events: none;
+}
+
+/* Specific buttons styling */
+.glow-btn {
+    padding: 8px 16px;
+    background: rgba(0, 240, 255, 0.05);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+}
+.glow-btn:hover {
+    background: rgba(0, 240, 255, 0.25);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), inset 0 0 8px rgba(0, 240, 255, 0.2);
+    color: #fff;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    border-color: var(--color-orange);
+    color: var(--color-orange);
+    text-shadow: 0 0 5px var(--color-orange-glow);
+    background: rgba(255, 91, 0, 0.05);
+}
+.submit-btn:hover {
+    background: rgba(255, 91, 0, 0.25);
+    box-shadow: 0 0 15px rgba(255, 91, 0, 0.4), inset 0 0 8px rgba(255, 91, 0, 0.2);
+    color: #fff;
+    border-color: #fff;
+}
+
+/* FOOTER MODULE (GRAPH & TERMINAL) */
+.hud-footer {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+    height: 250px;
+    min-height: 0;
+}
+
+.graph-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.graph-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 5px 15px 15px;
+    overflow: hidden;
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* TERMINAL PANEL */
+.terminal-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-content {
+    background: rgba(0, 2, 8, 0.8);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px inset rgba(0, 240, 255, 0.1);
+}
+
+.log-line {
+    line-height: 1.4;
+    word-break: break-all;
+    border-left: 2px solid transparent;
+    padding-left: 6px;
+}
+
+.text-cyan {
+    color: var(--color-cyan);
+    border-left-color: var(--color-cyan);
+}
+.text-orange {
+    color: var(--color-orange);
+    border-left-color: var(--color-orange);
+}
+.text-green {
+    color: var(--color-green);
+    border-left-color: var(--color-green);
+}
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+/* ANIMATIONS & KEYFRAMES */
+@keyframes rotate-radar {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 5px var(--color-green-glow);
+    }
+    50% {
+        opacity: 0.4;
+        box-shadow: 0 0 1px transparent;
+    }
+}
+
+@keyframes pulse-orange {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 6px var(--color-orange-glow);
+    }
+    50% {
+        opacity: 0.3;
+        box-shadow: 0 0 1px transparent;
+    }
+}
+
+@keyframes fade-blip {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+/* RESPONSIVE FLIGHT MODIFICATIONS */
+@media (max-width: 1200px) {
+    .dashboard-container {
+        height: auto;
+        overflow-y: auto;
+    }
+    .hud-main {
+        grid-template-columns: 1fr;
+    }
+    .hud-footer {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 15px;
+    }
+    .graph-panel, .terminal-panel {
+        height: 250px;
+    }
+    body {
+        overflow-y: auto;
+    }
+}
+
+/* ==========================================
+   BOOT LOADER (FLIGHT SYSTEM INITIALIZER)
+   ========================================== */
+#boot-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #02020a;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.8s;
+}
+
+#boot-loader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    width: 320px;
+}
+
+/* Flight Jet Symbol inside circular orbits */
+.flight-loader-symbol {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flight-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.6));
+}
+
+.jet-path {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: draw-jet 3s cubic-bezier(0.4, 0, 0.2, 1) forwards, pulse-glow 2s infinite ease-in-out;
+}
+
+.reverse-spin {
+    transform-origin: center;
+    animation: rotate-reverse 8s linear infinite;
+}
+
+.loader-text-panel {
+    width: 100%;
+    text-align: center;
+}
+
+.loader-title {
+    font-size: 13px;
+    letter-spacing: 3px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 12px;
+    text-shadow: 0 0 6px var(--color-cyan-glow);
+    font-family: var(--font-display);
+    text-transform: uppercase;
+}
+
+.loader-bar-container {
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: inset 0 0 4px rgba(0, 240, 255, 0.1);
+}
+
+.loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--color-cyan);
+    box-shadow: 0 0 8px var(--color-cyan), 0 0 15px var(--color-cyan);
+    transition: width 0.1s linear;
+}
+
+.loader-details {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
+}
+
+#loader-percentage {
+    color: var(--color-orange);
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--color-orange-glow);
+}
+
+/* Animations for loader elements */
+@keyframes draw-jet {
+    0% {
+        stroke-dashoffset: 400;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5));
+        opacity: 0.9;
+    }
+    50% {
+        filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.9));
+        opacity: 1;
+    }
+}
+
+@keyframes rotate-reverse {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}

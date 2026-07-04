@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GDFC - Advanced Space Flight Control and Telemetry HUD Diagnostics Dashboard.">
+    <title>GDFC // SPACE FLIGHT CONTROL SYSTEM</title>
+    <!-- Sci-fi Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- ChartJS for Telemetry Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- High-End Boot Loader Screen with Jet Flight Outline -->
+    <div id="boot-loader">
+        <div class="loader-content">
+            <!-- Flight Icon SVG (Fighter Jet / Flight sign) -->
+            <div class="flight-loader-symbol">
+                <svg viewBox="0 0 100 100" class="flight-svg">
+                    <!-- Futuristic fighter jet wireframe outline -->
+                    <path d="M 50 8 L 54 35 L 88 65 L 54 58 L 50 92 L 46 58 L 12 65 L 46 35 Z" fill="none" stroke="#00f0ff" stroke-width="2" stroke-linejoin="round" class="jet-path" />
+                    <!-- Orbital scanner ring -->
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0, 240, 255, 0.2)" stroke-width="1" stroke-dasharray="10 5" />
+                    <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255, 91, 0, 0.4)" stroke-dasharray="5 15" class="reverse-spin" />
+                </svg>
+            </div>
+            <div class="loader-text-panel">
+                <div class="loader-title" data-text="GDFC CORE BOOT SEQUENCE">GDFC CORE BOOT SEQUENCE</div>
+                <div class="loader-bar-container">
+                    <div class="loader-bar-fill" id="loader-progress-bar"></div>
+                </div>
+                <div class="loader-details">
+                    <span id="loader-status">INITIALIZING SYSTEM ARCHITECTURE...</span>
+                    <span id="loader-percentage">00%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Moving Space Background -->
+    <canvas id="space-canvas"></canvas>
+
+    <!-- Scanning Overlay Grid for Sci-fi HUD effect -->
+    <div class="hud-scanlines"></div>
+    <div class="hud-vignette"></div>
+
+    <div class="dashboard-container">
+        <!-- HEADER MODULE -->
+        <header class="hud-header">
+            <div class="header-glitch-container">
+                <div class="header-logo" data-text="GDFC // FLIGHT CONTROL">GDFC // FLIGHT CONTROL</div>
+                <div class="system-status"><span class="pulse-dot"></span>SYS STATUS: ACTIVE</div>
+            </div>
+            <div class="header-telemetry">
+                <div class="telemetry-widget">
+                    <span class="widget-label">VELOCITY</span>
+                    <span class="widget-val" id="hud-velocity">28,450 km/h</span>
+                </div>
+                <div class="telemetry-widget">
+                    <span class="widget-label">ALTITUDE</span>
+                    <span class="widget-val" id="hud-altitude">420.8 km</span>
+                </div>
+                <div class="telemetry-widget">
+                    <span class="widget-label">PITCH / YAW</span>
+                    <span class="widget-val" id="hud-attitude">+12.4° / -2.8°</span>
+                </div>
+                <div class="telemetry-widget">
+                    <span class="widget-label">COORDINATES</span>
+                    <span class="widget-val">45°N, 122°W</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT Grid -->
+        <main class="hud-main">
+            <!-- LEFT COLUMN: Cockpit Avionics & Horizon HUD -->
+            <section class="hud-panel avionics-panel">
+                <div class="panel-header">
+                    <h2><span class="arrow">>></span> AVIONICS HUD & RADAR</h2>
+                    <span class="panel-sub">LIVE TELEMETRY SWEEP</span>
+                </div>
+                
+                <div class="panel-content avionics-content">
+                    <!-- Attitude Indicator (Flight Horizon) -->
+                    <div class="gyro-widget">
+                        <div class="gyro-ring">
+                            <div class="gyro-horizon" id="hud-horizon">
+                                <div class="pitch-lines"></div>
+                            </div>
+                        </div>
+                        <div class="gyro-marker"></div>
+                        <div class="gyro-label">ATTITUDE DIRECTORY</div>
+                    </div>
+
+                    <!-- Radar Scan Indicator -->
+                    <div class="radar-widget">
+                        <canvas id="radar-canvas"></canvas>
+                        <div class="radar-scanline"></div>
+                        <div class="radar-crosshair"></div>
+                        <div class="radar-blips" id="radar-blips"></div>
+                        <div class="gyro-label">DEBRIS LIDAR SCANNER</div>
+                    </div>
+                    
+                    <!-- Engine Thrust & Core Bars -->
+                    <div class="engine-meters">
+                        <div class="engine-bar-wrapper">
+                            <span class="bar-name">ION COMPRESSION</span>
+                            <div class="bar-track"><div class="bar-fill thrust-fill" style="width: 82%"></div></div>
+                        </div>
+                        <div class="engine-bar-wrapper">
+                            <span class="bar-name">REACTOR COHERENCE</span>
+                            <div class="bar-track"><div class="bar-fill reactor-fill" style="width: 94%"></div></div>
+                        </div>
+                        <div class="engine-bar-wrapper">
+                            <span class="bar-name">PLASMA EXPANSION</span>
+                            <div class="bar-track"><div class="bar-fill plasma-fill" style="width: 71%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: Diagnostics & ML Inputs (17 Features) -->
+            <section class="hud-panel diagnostics-panel">
+                <div class="panel-header diagnostics-header-row">
+                    <div>
+                        <h2><span class="arrow">>></span> PARAMETER DIAGNOSTICS</h2>
+                        <span class="panel-sub">GDFC 17-FEATURE COMPONENT INPUT</span>
+                    </div>
+                    <!-- Sample Data Filler Trigger Button -->
+                    <button type="button" id="btn-fill-sample" class="hud-btn glow-btn">
+                        <span class="btn-scanlines"></span>
+                        <span class="btn-text">🔘 FILL SAMPLE DATA</span>
+                    </button>
+                </div>
+
+                <div class="panel-content diagnostics-content">
+                    <form id="diagnostics-form">
+                        <!-- Input Grid: 17 inputs, 3 per row -->
+                        <div class="inputs-grid" id="inputs-grid">
+                            <!-- Statically write 17 inputs for reliability -->
+                            <div class="input-card">
+                                <label for="feat-1">FEATURE 1 <span class="hex-tag">[F-01]</span></label>
+                                <input type="number" step="any" id="feat-1" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-2">FEATURE 2 <span class="hex-tag">[F-02]</span></label>
+                                <input type="number" step="any" id="feat-2" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-3">FEATURE 3 <span class="hex-tag">[F-03]</span></label>
+                                <input type="number" step="any" id="feat-3" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-4">FEATURE 4 <span class="hex-tag">[F-04]</span></label>
+                                <input type="number" step="any" id="feat-4" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-5">FEATURE 5 <span class="hex-tag">[F-05]</span></label>
+                                <input type="number" step="any" id="feat-5" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-6">FEATURE 6 <span class="hex-tag">[F-06]</span></label>
+                                <input type="number" step="any" id="feat-6" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-7">FEATURE 7 <span class="hex-tag">[F-07]</span></label>
+                                <input type="number" step="any" id="feat-7" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-8">FEATURE 8 <span class="hex-tag">[F-08]</span></label>
+                                <input type="number" step="any" id="feat-8" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-9">FEATURE 9 <span class="hex-tag">[F-09]</span></label>
+                                <input type="number" step="any" id="feat-9" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-10">FEATURE 10 <span class="hex-tag">[F-10]</span></label>
+                                <input type="number" step="any" id="feat-10" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-11">FEATURE 11 <span class="hex-tag">[F-11]</span></label>
+                                <input type="number" step="any" id="feat-11" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-12">FEATURE 12 <span class="hex-tag">[F-12]</span></label>
+                                <input type="number" step="any" id="feat-12" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-13">FEATURE 13 <span class="hex-tag">[F-13]</span></label>
+                                <input type="number" step="any" id="feat-13" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-14">FEATURE 14 <span class="hex-tag">[F-14]</span></label>
+                                <input type="number" step="any" id="feat-14" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-15">FEATURE 15 <span class="hex-tag">[F-15]</span></label>
+                                <input type="number" step="any" id="feat-15" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-16">FEATURE 16 <span class="hex-tag">[F-16]</span></label>
+                                <input type="number" step="any" id="feat-16" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <div class="input-card">
+                                <label for="feat-17">FEATURE 17 <span class="hex-tag">[F-17]</span></label>
+                                <input type="number" step="any" id="feat-17" placeholder="0.00" required>
+                                <span class="input-glow"></span>
+                            </div>
+                            <!-- Spacing filler to make the grid tidy -->
+                            <div class="input-card info-card">
+                                <div class="info-pulse"></div>
+                                <span class="info-lbl">GDFC TELEMETRY REACTOR</span>
+                                <span class="info-status">READY FOR VECTOR CALCS</span>
+                            </div>
+                        </div>
+
+                        <!-- Action trigger to simulate flight path & render graph -->
+                        <div class="diagnostics-actions">
+                            <button type="submit" id="btn-submit" class="hud-btn submit-btn">
+                                <span class="btn-scanlines"></span>
+                                <span class="btn-text">⚡ INITIATE FLIGHT PATH CALCULATION</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER MODULE: Graph and Terminal Log -->
+        <footer class="hud-footer">
+            <!-- Center Graph Telemetry -->
+            <section class="hud-panel graph-panel">
+                <div class="panel-header">
+                    <h2><span class="arrow">>></span> FLIGHT DYNAMICS & ENERGY RESOLUTION GRAPH</h2>
+                    <span class="panel-sub">DYNAMIC COMPUTED TELEMETRY STREAM</span>
+                </div>
+                <div class="panel-content graph-content">
+                    <div class="chart-container">
+                        <canvas id="telemetry-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scrolling Terminal logs -->
+            <section class="hud-panel terminal-panel">
+                <div class="panel-header">
+                    <h2><span class="arrow">>></span> DIAGNOSTICS CONSOLE LOG</h2>
+                    <span class="panel-sub">SYSTEM MESSAGES</span>
+                </div>
+                <div class="panel-content terminal-content" id="terminal-log">
+                    <div class="log-line text-cyan">[00:00:00] GDFC BOOT LOADER INITIALIZED...</div>
+                    <div class="log-line text-cyan">[00:00:01] DEBRIS SCANNER ONLINE. READY FOR LAUNCH DIRECTION.</div>
+                    <div class="log-line text-orange">[00:00:02] WARNING: CORE RE-ENTRY COEFFICIENTS STANDING BY. FILL SAMPLE DATA TO COMPUTE FLIGHT VECTOR.</div>
+                </div>
+            </section>
+        </footer>
+    </div>
+
+    <!-- Core Script -->
+    <script src="app.js"></script>
+</body>
+</html>
